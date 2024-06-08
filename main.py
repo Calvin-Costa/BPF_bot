@@ -4,7 +4,7 @@ import os
 import discord
 from discord.ext import commands
 from discord import app_commands
-
+import db.database #to run db.__init__ and initialize database
 from bot_token import TOKEN
 
 permission = discord.Intents.default()

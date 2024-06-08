@@ -14,7 +14,6 @@ class tierlist(commands.GroupCog):
         self.bot = bot
         self.db = DataHandler()
         super().__init__()
-        self.ranks = [app_commands.Choice(name="Rank S", value="Rank S"),app_commands.Choice(name="Rank A", value="Rank A"), app_commands.Choice(name="Rank B", value="Rank B"), app_commands.Choice(name="Rank C", value="Rank C"),app_commands.Choice(name="Rank D", value="Rank D")]
 
     async def name_autocomplete(self,interact: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
         data = []
@@ -36,27 +35,27 @@ class tierlist(commands.GroupCog):
             data.append(app_commands.Choice(name=choice_novel, value=choice_novel))
         return data
 
-    @app_commands.command(name="add", description="adiciona uma história da tierlist")
+    @app_commands.command(name="add", description="adds a story in tierlist")
     @app_commands.autocomplete(name=name_autocomplete)
     @app_commands.choices(tier=[app_commands.Choice(name="Rank S", value="Rank S"),app_commands.Choice(name="Rank A", value="Rank A"), app_commands.Choice(name="Rank B", value="Rank B"), app_commands.Choice(name="Rank C", value="Rank C"),app_commands.Choice(name="Rank D", value="Rank D")])
     async def tierlist_add(self, interaction: discord.Interaction, tier: app_commands.Choice[str], name: str) -> None:
         """adiciona uma história"""
         await self.tierlist_handler(interaction,tier,name,command='add')
         #await interaction.response.send_message(tier.value)
-        await interaction.response.send_message("História adicionada!", ephemeral=True)
+        await interaction.response.send_message("Story added!", ephemeral=True)
 
-    @app_commands.command(name="del", description="deleta uma história da tierlist")
+    @app_commands.command(name="del", description="deletes a story from tierlist")
     @app_commands.autocomplete(name=name_autocomplete)
     @app_commands.choices(tier=[app_commands.Choice(name="Rank S", value="Rank S"),app_commands.Choice(name="Rank A", value="Rank A"), app_commands.Choice(name="Rank B", value="Rank B"), app_commands.Choice(name="Rank C", value="Rank C"),app_commands.Choice(name="Rank D", value="Rank D")])
     async def tierlist_del(self, interaction: discord.Interaction, tier: app_commands.Choice[str], name: str) -> None:
         """deleta uma história"""
         success_message = await self.tierlist_handler(interaction,tier,name,command='del')
         if success_message:
-            await interaction.response.send_message("História deletada!", ephemeral=True)
+            await interaction.response.send_message("Story removed!", ephemeral=True)
         else:
-            await interaction.response.send_message("História não encontrada!", ephemeral=True)
+            await interaction.response.send_message("Story not found!", ephemeral=True)
 
-    @app_commands.command(name="show", description="mostra toda a tierlist")
+    @app_commands.command(name="show", description="shows entire tierlist")
     async def tierlist_show(self, interaction: discord.Interaction, name: typing.Optional[discord.Member]) -> None:
         """mostra a tierlist"""
         embed,image = await self.show_novels(interaction, name)
@@ -77,6 +76,8 @@ class tierlist(commands.GroupCog):
     async def add_novels(self, tier, name,user_tierlist, guild_id, user_id):
         novels = await self.db.load_novels()
         success_message = True
+        await self.check_guild_exists(user_tierlist, guild_id, user_id)
+        await self.check_user_exists(user_tierlist, guild_id, user_id)
         if name not in novels:
             novels.append(name)
             await self.db.save_novels(novels)
@@ -87,6 +88,8 @@ class tierlist(commands.GroupCog):
 
     async def del_novels(self, tier, name, user_tierlist, guild_id, user_id):
         success_message = True
+        await self.check_guild_exists(user_tierlist, guild_id, user_id)
+        await self.check_user_exists(user_tierlist, guild_id, user_id)
         if name in user_tierlist[guild_id][user_id][tier.value]:
             user_tierlist[guild_id][user_id][tier.value].remove(name)
             await self.db.save_tierlist(user_tierlist)
@@ -98,16 +101,12 @@ class tierlist(commands.GroupCog):
         user_tierlist = await self.db.load_tierlist()
         guild_id = str(interaction.guild_id)
         user_id = str(interaction.user.id)
-        print(name)
-        if name:
-            user_id = str(name.id)
-        if guild_id not in user_tierlist:
-            user_tierlist[guild_id] = {user_id: {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}}
-            await self.db.save_tierlist(tierlist_data=user_tierlist)
+        await self.check_guild_exists(name, user_tierlist, guild_id,user_id) #check if guild has already been initialized within json
 
-        if user_id not in user_tierlist[guild_id]:
-            user_tierlist[guild_id][user_id] = {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}
-            await self.db.save_tierlist(tierlist_data=user_tierlist)
+        if name: # check if optional argument discord.Member was sent with the command
+            user_id = str(name.id)
+
+        await self.check_user_exists(user_tierlist, guild_id, user_id) #check if user has already been initialized within json
 
         user_data = user_tierlist[guild_id][user_id]
 
@@ -120,6 +119,16 @@ class tierlist(commands.GroupCog):
 
 
         return embed,draw_image
+
+    async def check_user_exists(self, user_tierlist, guild_id, user_id):
+        if user_id not in user_tierlist[guild_id]:
+            user_tierlist[guild_id][user_id] = {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}
+            await self.db.save_tierlist(tierlist_data=user_tierlist)
+
+    async def check_guild_exists(self,user_tierlist, guild_id, user_id):
+        if guild_id not in user_tierlist:
+            user_tierlist[guild_id] = {user_id: {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}}
+            await self.db.save_tierlist(tierlist_data=user_tierlist)
 
 
         # message = ""
