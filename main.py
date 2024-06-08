@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-from views.tierlist_views import TierlistViews
+from bot_token import TOKEN
 
 permission = discord.Intents.default()
 #permitir que o bot leia mensagens:
