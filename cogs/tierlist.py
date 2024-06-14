@@ -15,41 +15,54 @@ class tierlist(commands.GroupCog):
         self.db = DataHandler()
         super().__init__()
 
-    async def name_autocomplete(self,interact: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+    async def guild_autocomplete(self,interact: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
         data = []
-        novel_list = await self.db.load_novels()
+        guild_id = await self.db.get_or_create_guild_model(interact.guild_id)
+        novel_list = await self.db.get_books_in_guild(guild_id)
         if len(current) > 3:
             novel_list = list(filter(lambda x: current.lower() in x.lower(), novel_list))
         for choice_novel in novel_list[:25]:
             data.append(app_commands.Choice(name=choice_novel, value=choice_novel))
         return data
     
-    async def del_autocomplete(self,interact: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
+    async def user_autocomplete(self,interact: discord.Interaction, current: str) -> typing.List[app_commands.Choice[str]]:
         data = []
-        novel_list = await self.db.load_tierlist()
-        tier = interact.namespace.tier
-        user_list = novel_list[str(interact.guild_id)][str(interact.user.id)][tier]
+        guild_id = await self.db.get_or_create_guild_model(interact.guild_id)
+        user_id = await self.db.get_or_create_user_model(interact.user.id,guild_id)
+
+        novel_list = await self.db.get_user_books_per_guild(guild_id, user_id)
         if len(current) > 3:
-            user_list = list(filter(lambda x: current.lower() in x.lower(), user_list))
-        for choice_novel in user_list[:25]:
+            novel_list = list(filter(lambda x: current.lower() in x.lower(), novel_list))
+        for choice_novel in novel_list[:25]:
             data.append(app_commands.Choice(name=choice_novel, value=choice_novel))
         return data
 
     @app_commands.command(name="add", description="adds a story in tierlist")
-    @app_commands.autocomplete(name=name_autocomplete)
-    @app_commands.choices(tier=[app_commands.Choice(name="Rank S", value="Rank S"),app_commands.Choice(name="Rank A", value="Rank A"), app_commands.Choice(name="Rank B", value="Rank B"), app_commands.Choice(name="Rank C", value="Rank C"),app_commands.Choice(name="Rank D", value="Rank D")])
+    @app_commands.autocomplete(name=guild_autocomplete)
+    @app_commands.choices(tier=[
+        app_commands.Choice(name="Rank S", value="1"),
+        app_commands.Choice(name="Rank A", value='2'),
+        app_commands.Choice(name="Rank B", value='3'), 
+        app_commands.Choice(name="Rank C", value='4'),
+        app_commands.Choice(name="Rank D", value='5')])
     async def tierlist_add(self, interaction: discord.Interaction, tier: app_commands.Choice[str], name: str) -> None:
         """adiciona uma história"""
-        await self.tierlist_handler(interaction,tier,name,command='add')
-        #await interaction.response.send_message(tier.value)
-        await interaction.response.send_message("Story added!", ephemeral=True)
+        if len(name) > 60:
+            await interaction.response.send_message(f"That name was too long! It needs to be {len(name)-80} less characters!")
+            return
+        success_message = await self.tierlist_handler(interaction, int(tier.value), name, command='add')
+        if success_message:
+            await interaction.response.send_message("Story added!", ephemeral=True)
+            return
+        await interaction.response.send_message("Story already in your list!", ephemeral=True)
+
+
 
     @app_commands.command(name="del", description="deletes a story from tierlist")
-    @app_commands.autocomplete(name=name_autocomplete)
-    @app_commands.choices(tier=[app_commands.Choice(name="Rank S", value="Rank S"),app_commands.Choice(name="Rank A", value="Rank A"), app_commands.Choice(name="Rank B", value="Rank B"), app_commands.Choice(name="Rank C", value="Rank C"),app_commands.Choice(name="Rank D", value="Rank D")])
-    async def tierlist_del(self, interaction: discord.Interaction, tier: app_commands.Choice[str], name: str) -> None:
+    @app_commands.autocomplete(name=user_autocomplete)
+    async def tierlist_del(self, interaction: discord.Interaction, name: str) -> None:
         """deleta uma história"""
-        success_message = await self.tierlist_handler(interaction,tier,name,command='del')
+        success_message = await self.tierlist_handler(interaction,1,name,command='del')
         if success_message:
             await interaction.response.send_message("Story removed!", ephemeral=True)
         else:
@@ -58,57 +71,78 @@ class tierlist(commands.GroupCog):
     @app_commands.command(name="show", description="shows entire tierlist")
     async def tierlist_show(self, interaction: discord.Interaction, name: typing.Optional[discord.Member]) -> None:
         """mostra a tierlist"""
-        embed,image = await self.show_novels(interaction, name)
-        message = f"{interaction.user.nick}, here's your tierlist!"
+        message = f"{interaction.user.display_name}, here's your tierlist!"
         if name:
-            message = f"{interaction.user.nick}, here's {name.mention} tier list!"
-        tierlist_view = TierlistViews(name)
+            message = f"{interaction.user.display_name}, here's {name.mention} tier list!"
+        
+        embed,image, guild_id, user_id = await self.show_novels(interaction, name)
+
+        tierlist_view = TierlistViews(guild_id, user_id,interaction.user.display_name,name)
         await interaction.response.send_message(message, file=image, view=tierlist_view)
 
+    @app_commands.command(name="swap", description="swaps two titles (in the same rank) on your tierlist")
+    @app_commands.autocomplete(firstnovel=user_autocomplete, secondnovel=user_autocomplete)
+    async def tierlist_swap(self, interaction: discord.Interaction, firstnovel: str, secondnovel: str) -> None:
+        success = await self.tierlist_swapper(interaction,firstnovel,secondnovel)
+        if not success:
+            await interaction.response.send_message("Swapping failed! Are you sure both novels are the same rank?", ephemeral=True)
+        await interaction.response.send_message(f'{firstnovel} and {secondnovel} swapped positions!', ephemeral= True)
+
+    async def tierlist_swapper(self, interaction: discord.Interaction, firstnovel: str, secondnovel: str):
+        guild_id = interaction.guild_id
+        user_id = interaction.user.id
+        guild_id = await self.db.get_or_create_guild_model(guild_id)
+        user_id = await self.db.get_or_create_user_model(user_id, guild_id)
+        return await self.db.tierlist_swap_positions(user_id,guild_id,firstnovel,secondnovel)
+
     async def tierlist_handler(self, interaction: discord.Interaction,tier: app_commands.Choice[str],name: str, command: str):
-        user_tierlist = await self.db.load_tierlist()
         guild_id = str(interaction.guild_id)
         user_id = str(interaction.user.id)
-        action = {'add': self.add_novels,'del': self.del_novels}
-        success_message = await action[command](tier,name,user_tierlist, guild_id, user_id)
+
+        if command == 'add':
+            success_message = await self.add_novels(tier,name,guild_id,user_id)
+        elif command == 'del':
+            success_message = await self.del_novels(name,guild_id,user_id)
         return success_message
     
-    async def add_novels(self, tier, name,user_tierlist, guild_id, user_id):
-        novels = await self.db.load_novels()
-        success_message = True
-        await self.check_guild_exists(user_tierlist, guild_id, user_id)
-        await self.check_user_exists(user_tierlist, guild_id, user_id)
-        if name not in novels:
-            novels.append(name)
-            await self.db.save_novels(novels)
-        if name not in user_tierlist[guild_id][user_id][tier.value]:
-            user_tierlist[guild_id][user_id][tier.value].append(name)
-            await self.db.save_tierlist(user_tierlist)
+    async def add_novels(self, tier, name, guild_id, user_id)-> bool:
+        guild_id = await self.db.get_or_create_guild_model(guild_id)
+        user_id = await self.db.get_or_create_user_model(user_id, guild_id)
+        book_id, new_book = await self.db.get_or_create_book_id(book_name=name,guild_id=guild_id)
+
+        success_message = await self.db.get_or_create_tierlist_entry(user_id=user_id, book_id=book_id, rank=tier, guild_id= guild_id)
+
+        if success_message and not new_book:
+            await self.db.alter_times_in_tierlist(book_id,guild_id,1)
+
         return success_message
 
-    async def del_novels(self, tier, name, user_tierlist, guild_id, user_id):
-        success_message = True
-        await self.check_guild_exists(user_tierlist, guild_id, user_id)
-        await self.check_user_exists(user_tierlist, guild_id, user_id)
-        if name in user_tierlist[guild_id][user_id][tier.value]:
-            user_tierlist[guild_id][user_id][tier.value].remove(name)
-            await self.db.save_tierlist(user_tierlist)
-        else:
-            success_message = False
+    async def del_novels(self, name, guild_id, user_id) -> bool:
+        '''Caminho do algoritmo:
+        1- Checar se a história existe na tierlist
+        2- Remover a história
+        3- Checar se a história existe em Book e se times_in_tierlist = 1
+        '''
+        guild_id = await self.db.get_or_create_guild_model(guild_id)
+        user_id = await self.db.get_or_create_user_model(user_id, guild_id)
+        print('passei aqui')
+        success_message = False
+        novel_id, novel_exists = await self.db.get_book_id(name,guild_id)
+        if novel_exists:
+            await self.db.remove_book_from_tierlist(book_id=novel_id, user_id=user_id,guild_id=guild_id)
+            success_message = True
         return success_message
 
     async def show_novels(self,interaction: discord.Interaction, name = None):
-        user_tierlist = await self.db.load_tierlist()
-        guild_id = str(interaction.guild_id)
-        user_id = str(interaction.user.id)
-        await self.check_guild_exists(name, user_tierlist, guild_id,user_id) #check if guild has already been initialized within json
+        guild_id = interaction.guild_id
+        user_id = interaction.user.id
+        if name:
+            user_id = name.id
+        guild_id = await self.db.get_or_create_guild_model(guild_id)
+        user_id = await self.db.get_or_create_user_model(user_id, guild_id)
 
-        if name: # check if optional argument discord.Member was sent with the command
-            user_id = str(name.id)
-
-        await self.check_user_exists(user_tierlist, guild_id, user_id) #check if user has already been initialized within json
-
-        user_data = user_tierlist[guild_id][user_id]
+        user_data = await self.db.show_tierlist_entries(user_id,guild_id)
+        print(user_data)
 
         tierlist_image = TierlistImage()
         tierlist_image.draw_tier_list(user_data,user_id)
@@ -117,29 +151,7 @@ class tierlist(commands.GroupCog):
         embed = discord.Embed(color=discord.Color.red())
         embed.set_image(url=f"attachment://{user_id}_img.png")
 
-
-        return embed,draw_image
-
-    async def check_user_exists(self, user_tierlist, guild_id, user_id):
-        if user_id not in user_tierlist[guild_id]:
-            user_tierlist[guild_id][user_id] = {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}
-            await self.db.save_tierlist(tierlist_data=user_tierlist)
-
-    async def check_guild_exists(self,user_tierlist, guild_id, user_id):
-        if guild_id not in user_tierlist:
-            user_tierlist[guild_id] = {user_id: {"Rank S": [], "Rank A": [], "Rank B": [], "Rank C": [], "Rank D": []}}
-            await self.db.save_tierlist(tierlist_data=user_tierlist)
-
-
-        # message = ""
-        # for rank,novel_list in user_data.items():
-        #     message += f"{rank}: "
-        #     for index,novel_name in enumerate(novel_list):
-        #         message += f"{novel_name}"
-        #         if index < len(novel_list)-1:
-        #             message +=", "
-        #     message += "\n"
-
+        return embed,draw_image, guild_id,user_id
 
 async def setup(bot):
     await bot.add_cog(tierlist(bot))

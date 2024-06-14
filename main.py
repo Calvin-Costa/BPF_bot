@@ -4,8 +4,9 @@ import os
 import discord
 from discord.ext import commands
 from discord import app_commands
-import db.database #to run db.__init__ and initialize database
+from peewee import *
 from bot_token import TOKEN
+from db.database import db, User, Book, Tierlist, Rank
 
 permission = discord.Intents.default()
 #permitir que o bot leia mensagens:
@@ -31,15 +32,15 @@ async def on_message(msg:discord.Message):
     if msg.author.bot:
         return
     await bot.process_commands(msg)
-    chance = random.random()
-    if chance >= 0.9:
-        await msg.add_reaction('👍')
+    # chance = random.random()
+    # if chance >= 0.95:
+    #     await msg.add_reaction('👍')
 
-@bot.event
-async def on_message_delete(msg:discord.Message):
-    if msg.author.bot:
-        return
-    await msg.channel.send('ihhh apagou por que? tá com medinho do que vou ler é?!')
+# @bot.event
+# async def on_message_delete(msg:discord.Message):
+#     if msg.author.bot:
+#         return
+#     await msg.channel.send('ihhh apagou por que? tá com medinho do que vou ler é?!')
 
 @bot.command()
 async def sincronizar(ctx:commands.Context):
@@ -49,6 +50,8 @@ async def sincronizar(ctx:commands.Context):
     else:
         await ctx.reply('Você não pode fazer isso. =/ )')
 
+#a ORM peewee cria a tabela apenas se ela já não existir
+db.create_tables([User,Book, Tierlist, Rank])
 #isso é a última coisa que tem que ter:
 bot.run(TOKEN)
 
