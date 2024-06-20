@@ -2,7 +2,7 @@ Este é um bot feito para o servidor Brazil Progression Fantasy - um servidor co
 
 O Bot atualmente contém a funcionalidade de criar, mostrar e gerenciar uma Tierlist (uma espécie de lista hierárquica, onde os usuários podem organizar suas histórias já lidas, de modo a mostrar para outros usuários suas preferências, criar debates e ver recomendações através das listas de outros usuários)
 
-É um projeto que está em produção e sendo utilizado por pessoas reais.
+É um projeto que está em produção e sendo utilizado por pessoas reais. Foi utilizado conceitos de orientação a objeto, banco de dados (feito um CRUD com a ORM peewee), entre outros.
 
 /tierlist show -> Mostra a tierlist do usuário que enviou o comando (parâmetro opcional: nome, que permite ver a tierlist de outra pessoa)
 /tierlist add -> Adiciona um livro à um tier da lista
