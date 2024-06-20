@@ -1,5 +1,20 @@
-Installation:
+Este é um bot feito para o servidor Brazil Progression Fantasy - um servidor com foco em histórias de fantasia.
 
-You have to create a bot on https://discord.com/developers
+O Bot atualmente contém a funcionalidade de criar, mostrar e gerenciar uma Tierlist (uma espécie de lista hierárquica, onde os usuários podem organizar suas histórias já lidas, de modo a mostrar para outros usuários suas preferências, criar debates e ver recomendações através das listas de outros usuários)
 
-Get the token and create a bot_token.py file and add variable TOKEN = 'bot token'
+É um projeto que está em produção e sendo utilizado por pessoas reais.
+
+/tierlist show -> Mostra a tierlist do usuário que enviou o comando (parâmetro opcional: nome, que permite ver a tierlist de outra pessoa)
+/tierlist add -> Adiciona um livro à um tier da lista
+/tierlist del -> Remove um livro da lista do usuário
+/tierlist swap -> Troca a posição de duas histórias, dentro do mesmo tier
+E os comandos administrativos:
+/admin admindel -> remove um livro do servidor, inclusive da lista dos usuários
+/admin ban -> Torna um usuário impedido de utilizar qualquer comando da tierlist
+/admin unban -> Remove o impedimento do comando acima.
+
+Instalação:
+
+Criar um bot em https://discord.com/developers e pegar o token
+
+Após isso, criar um arquivo bot_token.py e adicionar a variável TOKEN, que recebe o token como string, assim: TOKEN = 'bot token'
