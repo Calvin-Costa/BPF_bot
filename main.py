@@ -24,7 +24,7 @@ async def load_cogs():
         if file.endswith('.py'):
             print(f'Cog {file} inicializada')
             await bot.load_extension(f'cogs.{file[:-3]}')
-
+            
 @bot.command()
 async def reload(ctx: commands.Context):
     for file in os.listdir('cogs'):

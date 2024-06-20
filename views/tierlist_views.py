@@ -20,11 +20,3 @@ class SelectMenuView(View):
             self.view.sel_value = self.values[0]
             await interaction.response.edit_message(content=f"{self.values[0]} was selected!", view=None)
             self.view.stop()
-
-
-  # @select(placeholder='Choose which book you want',options=self.sel_options)
-   # async def selection_menu(self,interaction: Interaction,selection:Select):
-   #    selected_value = selection.values[0]
-   #    await interaction.response.edit_message(content=f'{selected_value} was selected!', view=None)
-   #    self.stop()
-   #    return selected_value
