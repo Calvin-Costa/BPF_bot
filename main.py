@@ -2,7 +2,7 @@ import random
 import os
 
 from db.database import db, User, Book, Tierlist, Rank
-from bot_token import TOKEN
+import settings
 
 from discord.ext import commands
 from discord import app_commands, Intents, Message
@@ -56,7 +56,4 @@ async def sincronizar(ctx:commands.Context):
 #a ORM peewee cria a tabela apenas se ela já não existir
 db.create_tables([User,Book, Tierlist, Rank])
 #isso é a última coisa que tem que ter:
-bot.run(TOKEN)
-
-
-
+bot.run(settings.DISCORD_BOT_TOKEN)
