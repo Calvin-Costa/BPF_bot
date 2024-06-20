@@ -11,7 +11,7 @@ class Messages(commands.Cog):
     async def on_message(self, msg: discord.Message):
         if msg.author.bot:
                 return
-        await self.bot.process_commands(msg)
+        #await self.bot.process_commands(msg)
         # if random.random()*100 >= 90:
         #     await msg.add_reaction('👍')
 

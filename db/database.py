@@ -1,5 +1,6 @@
-from peewee import *
-from playhouse.migrate import *
+from peewee import (SqliteDatabase,
+                     AutoField,CharField,IntegerField,FloatField,ForeignKeyField,TextField, Model)
+#from playhouse.migrate 
 """A variável db recebe a classe SqliteDatabase do peewee que cria 
 um banco de dados SQL"""
 db = SqliteDatabase('bot.db')
@@ -37,7 +38,12 @@ class Tierlist(BaseModel):
     guild_id: ForeignKeyField = ForeignKeyField(Guild,backref='guilds')
     position: IntegerField = IntegerField(null=False)
 
-db.create_tables([User, Book, Rank, Guild, Tierlist])
+class BannedUser(BaseModel):
+    banned_user_id: AutoField = AutoField()
+    user_id: ForeignKeyField = ForeignKeyField(User,backref='users')
+    guild_id: ForeignKeyField = ForeignKeyField(Guild, backref='guilds')
+
+db.create_tables([User, Book, Rank, Guild, Tierlist,BannedUser])
 
 with db.atomic():
     Rank.get_or_create(rank='Rank S')
