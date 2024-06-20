@@ -1,5 +1,18 @@
-BPF_bot.zip
-bot_token.py
+# Environments
+.env
+.venv/
+
+# Database
+bot.db
 bot copy.db
+
+#pycache
+__pycache__/
+cogs/__pycache__
+db/__pycache__
+views/__pycache__
+
+# Others
 discord.log
 squarecloud.app
+BPF_bot.zip
