@@ -17,4 +17,8 @@ Instalação:
 
 Criar um bot em https://discord.com/developers e pegar o token
 
-Após isso, criar um arquivo bot_token.py e adicionar a variável TOKEN, que recebe o token como string, assim: TOKEN = 'bot token'
+Após isso, importar python-dotenv: `pip install python-dotenv`
+
+Uma vez instalado, criar um arquivo .dotenv na página inicial com a variável DISCORD_TOKEN que receberá o token do bot (utilizar aspas).
+
+bot_token.py e adicionar a variável TOKEN, que recebe o token como string, assim: TOKEN = 'bot token'
