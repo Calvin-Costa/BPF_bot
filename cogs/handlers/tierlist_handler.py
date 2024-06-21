@@ -13,7 +13,7 @@ from thefuzz import fuzz
 from thefuzz import process
 
 from db.data_handler import DataHandler
-from views.tierlist_views import TierlistViews, SelectMenuView
+from views.tierlist_views import TierlistView, SelectMenuView
 
 class TierlistHandler():
     def __init__(self) -> None:
@@ -98,34 +98,48 @@ class TierlistHandler():
 
         if user:
             bot_message = f"{interaction.user.display_name}, here's {user.mention} tier list!"
-        tierlist_view = TierlistViews()
+        tierlist_view = TierlistView()
 
         user_data = await self.db.show_tierlist_entries(user_id,guild_id)
 
-        message_list = ['']
-        for rank,novel_list in user_data.items():
-            message = ''
-            if len(novel_list) == 0:
-                message += 'Empty. '
+        #message_list = ['']
+        #page_number = 0
+        list_per_rank = []
+        max_length = 0
+        for rank, novel_list in user_data.items():
+            if len(novel_list) > max_length:
+                max_length = len(novel_list)
+            list_per_rank.append(novel_list)
+        tierlist_view.data = list_per_rank
+        tierlist_view.bot_message = bot_message
+        tierlist_view.max_length = max_length
+        await tierlist_view.send_first_message(interaction)
+        #await interaction.response.send_message(bot_message,embeds=rank_embeds, view=tierlist_view)
+        #await interaction.response.send_message(bot_message, view=tierlist_view)
+        # for rank,novel_list in user_data.items():
+        #     message = ''
+        #     if len(novel_list) == 0:
+        #         message += 'Empty. '
 
-            for index,novel_name in enumerate(novel_list):
-                message += f"「{novel_name}」 "
-                if index < len(novel_list)-1:
-                    message += ' ' #f"{index +1}: "
-            if message_list[0] == '':
-                message_list[0] = message
-            else:
-                message_list.append(message)
+        #     for index,novel_name in enumerate(novel_list):
+        #         if len(message)> 600:
+        #             ...        
+        #         message += f"「{novel_name}」 "
+        #         if index < len(novel_list)-1:
+        #             message += ' ' #f"{index +1}: "
+        #     if message_list[0] == '':
+        #         message_list[0] = message
+        #     else:
+        #         message_list.append(message)
+        # embed_rank_s = Embed(color=Color.brand_red(), description=message_list[0], title='  ** Rank S ** ')
+        # embed_rank_a = Embed(color=Color.dark_orange(), description=message_list[1], title=" ** Rank A **")
+        # embed_rank_b = Embed(color=Color.orange(), description=message_list[2], title=" ** Rank B** ")
+        # embed_rank_c = Embed(color=Color.yellow(), description=message_list[3], title=" ** Rank C **")
+        # embed_rank_d = Embed(color=Color.green(), description=message_list[4], title=" ** Rank D **")
+        # embed_rank_e = Embed(color=Color.dark_teal(), description=message_list[5], title=" ** Rank E **")
+        # rank_embeds=[embed_rank_s,embed_rank_a,embed_rank_b,embed_rank_c,embed_rank_d,embed_rank_e]
 
-        embed_rank_s = Embed(color=Color.brand_red(), description=message_list[0], title='  ** Rank S ** ')
-        embed_rank_a = Embed(color=Color.dark_orange(), description=message_list[1], title=" ** Rank A **")
-        embed_rank_b = Embed(color=Color.orange(), description=message_list[2], title=" ** Rank B** ")
-        embed_rank_c = Embed(color=Color.yellow(), description=message_list[3], title=" ** Rank C **")
-        embed_rank_d = Embed(color=Color.green(), description=message_list[4], title=" ** Rank D **")
-        embed_rank_e = Embed(color=Color.dark_teal(), description=message_list[5], title=" ** Rank E **")
-        rank_embeds=[embed_rank_s,embed_rank_a,embed_rank_b,embed_rank_c,embed_rank_d,embed_rank_e]
 
-        await interaction.response.send_message(bot_message,embeds=rank_embeds, view=tierlist_view)
     
     async def swap_novels(self, interaction: Interaction,tier:int, firstnovel:str, secondnovel:str):
         user_id, guild_id = await self.get_user_data(interaction)

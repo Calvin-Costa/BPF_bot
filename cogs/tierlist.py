@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from db.data_handler import DataHandler
 from .handlers.tierlist_handler import TierlistHandler
-from views.tierlist_views import TierlistViews, SelectMenuView
+from views.tierlist_views import TierlistView, SelectMenuView
 
 class Tierlist(commands.Cog):
     def __init__(self, bot):
@@ -81,7 +81,7 @@ class Tierlist(commands.Cog):
         tier_value = int(tier.value)
         await self.th.swap_novels(interaction,tier_value,firstnovel,secondnovel)
 
-    @admin.command(name="banuser", description="ADMIN COMMAND: ban a user from using the tierlist")
+    @admin.command(name="banuser", description="ADMIN COMMAND: ban a user from using self.the tierlist")
     async def tierlist_ban(self, interaction: Interaction, user: Member) -> None:
         if interaction.user.guild_permissions.administrator:
             await self.th.ban_user(interaction,'banuser',user)
