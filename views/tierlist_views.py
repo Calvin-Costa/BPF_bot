@@ -1,3 +1,4 @@
+from math import ceil
 from discord.ui import View, Select, select, button, Button
 from discord import SelectOption, Interaction, Color, Embed, ButtonStyle, File
 
@@ -39,7 +40,7 @@ class TierlistView(View):
          self.previous_page_button.disabled = False
          self.next_page_button.disabled = False
          self.last_page_button.disabled = False
-      if self.current_page == (int(self.max_length/self.separator)+1):
+      if self.current_page == (ceil(self.max_length/self.separator)):
          self.last_page_button.disabled = True
          self.next_page_button.disabled = True
 
@@ -67,7 +68,7 @@ class TierlistView(View):
 
    @button(label='>', style=ButtonStyle.blurple)
    async def next_page_button(self, interaction:Interaction, button:Button):
-      if self.current_page < (int(self.max_length/self.separator)+1):
+      if self.current_page < (ceil(self.max_length/self.separator)):
          self.current_page += 1
          self.update_buttons()
       until_book = self.current_page * self.separator
@@ -77,8 +78,8 @@ class TierlistView(View):
 
    @button(label='>>|', style=ButtonStyle.green)
    async def last_page_button(self, interaction:Interaction, button:Button):
-      if self.current_page < (int(self.max_length/self.separator)+1):
-         self.current_page = int(self.max_length/self.separator)+1
+      if self.current_page < (ceil(self.max_length/self.separator)):
+         self.current_page = ceil(self.max_length/self.separator)
          self.update_buttons()
       until_book = self.current_page * self.separator
       from_book = until_book - self.separator
