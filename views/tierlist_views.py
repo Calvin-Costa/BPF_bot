@@ -9,9 +9,9 @@ class TierlistView(View):
    def __init__(self):
       super().__init__(timeout=None)
       self.ranks = {"Rank S": Color.brand_red, "Rank A": Color.dark_orange, "Rank B": Color.orange, "Rank C": Color.yellow, "Rank D": Color.green, "Rank E": Color.dark_teal}
+
    async def send_first_message(self, interaction:Interaction):
       embeds_list = await self.get_embeds_list(self.separator,0)
-      
       self.update_buttons()
       await interaction.response.send_message(content=self.bot_message,embeds=embeds_list, view=self)
 
@@ -32,11 +32,17 @@ class TierlistView(View):
    def update_buttons(self):
       self.current_page_button.label = f'{self.current_page}'
       self.current_page_button.disabled = True
+      print(ceil(self.max_length/self.separator))
       if self.current_page == 1:
          self.first_page_button.disabled = True
          self.previous_page_button.disabled = True
          self.next_page_button.disabled = False
          self.last_page_button.disabled = False
+      if (ceil(self.max_length/self.separator)) <= 1:
+         self.first_page_button.disabled = True
+         self.previous_page_button.disabled = True
+         self.next_page_button.disabled = True
+         self.last_page_button.disabled = True
       if self.current_page > 1:
          self.first_page_button.disabled = False
          self.previous_page_button.disabled = False
