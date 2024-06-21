@@ -39,6 +39,7 @@ class TierlistView(View):
          self.next_page_button.disabled = False
          self.last_page_button.disabled = False
       if (ceil(self.max_length/self.separator)) <= 1:
+         print('hi')
          self.first_page_button.disabled = True
          self.previous_page_button.disabled = True
          self.next_page_button.disabled = True
@@ -48,7 +49,7 @@ class TierlistView(View):
          self.previous_page_button.disabled = False
          self.next_page_button.disabled = False
          self.last_page_button.disabled = False
-      if self.current_page == (ceil(self.max_length/self.separator)):
+      if self.current_page == (ceil(self.max_length/self.separator)) and self.current_page != 1:
          self.first_page_button.disabled = False
          self.previous_page_button.disabled = False
          self.last_page_button.disabled = True
