@@ -5,6 +5,7 @@ O Bot atualmente contém a funcionalidade de criar, mostrar e gerenciar uma Tier
 É um projeto que está em produção e sendo utilizado por pessoas reais. Foi utilizado conceitos de orientação a objeto, banco de dados (feito um CRUD com a ORM peewee), entre outros.
 
 
+
 /tierlist show -> Mostra a tierlist do usuário que enviou o comando (parâmetro opcional: nome, que permite ver a tierlist de outra pessoa)
 
 /tierlist add -> Adiciona um livro à um tier da lista
@@ -14,11 +15,13 @@ O Bot atualmente contém a funcionalidade de criar, mostrar e gerenciar uma Tier
 /tierlist swap -> Troca a posição de duas histórias, dentro do mesmo tier
 
 E os comandos administrativos:
+
 /admin admindel -> remove um livro do servidor, inclusive da lista dos usuários
 
 /admin ban -> Torna um usuário impedido de utilizar qualquer comando da tierlist
 
 /admin unban -> Remove o impedimento do comando acima.
+
 
 
 Instalação:
